@@ -1,6 +1,13 @@
 class TasksController < ApplicationController
+  before_action :require_user_logged_in
+
   def index
-      @tasks = Task.all
+    if logged_in?
+      @task = current_user.tasks.build
+      @tasks = current_user.tasks.order(id: :desc).page(params[:page])
+    else
+      redirect_to 'session/new'
+    end
   end
 
   def show
@@ -12,11 +19,11 @@ class TasksController < ApplicationController
   end
 
   def create
-      @task = Task.new(task_params)
+      @task = current_user.tasks.build(task_params)
       
       if @task.save
           flash[:success] = 'タスクが正常に追加されました'
-          redirect_to @task
+          redirect_to root_url
       else
           flash.now[:danger] = 'タスクが追加されませんでした'
           render :new
